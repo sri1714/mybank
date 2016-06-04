@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.jenkins.blueocean</groupId>
+        <artifactId>blueocean-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>blueocean</artifactId>
+    <packaging>hpi</packaging>
+
+    <name>BlueOcean :: Aggregator</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-dashboard</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-rest-impl</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>groovy-maven-plugin</artifactId>
+                <version>2.0</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <source>
+                        //
+                        // The following code makes HPI dev a bit easier in this multi-module project, as it
+                        // permits "linking" of the HPIs by copying of their "the.hpl" files into the work/plugins
+                        // dir of this plugin. So, when running this plugin using "mvn hpi:run", changes in the
+                        // "linked" plugins will also be automatically picked up.
+                        //
+                        // See the following closure and it's uses after.
+                        //
+                        def linkHPI = {String pluginId, String pluginDir = pluginId ->
+
+                            def workPluginsDir = new File(basedir, 'work/plugins');
+                            def theHpl = new File(new File(basedir.parentFile, pluginDir), 'target/test-classes/the.hpl');
+
+                            if (theHpl.file) {
+                                workPluginsDir.mkdirs();
+                                ant.copy(file: theHpl, tofile: new File(workPluginsDir, pluginId + '.hpl'), overwrite: true, verbose: true);
+                            } else {
+                                println('Warning: no such file ' + theHpl);
+                            }
+                        };
+
+                        //
+                        // Link in other sub-modules. Add as needed.
+                        //
+                        linkHPI('blueocean-web');
+                        linkHPI('blueocean-dashboard');
+                        linkHPI('blueocean-rest');
+                        linkHPI('blueocean-commons');
+                        linkHPI('blueocean-rest-impl');
+                    </source>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
